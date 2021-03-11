@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>JSONQ types</title>
+<style type="text/css">
+
+*
+{
+	margin: 0;
+	padding: 0;
+}
+
+table
+{
+	border-collapse: collapse;
+	margin: 10px;
+}
+
+table:nth-of-type(1)
+{
+	background-color: linen;
+	position: sticky;
+	top: 0;
+}
+
+th, td
+{
+	border: black solid thin;
+	width: 13vw;
+}
+
+th
+{
+	text-align: left;
+}
+
+table tr:nth-of-type(1) th:nth-of-type(1)
+{
+	background-color: orange;
+}
+
+td
+{
+	text-align: center;
+	word-break: break-all;
+}
+
+</style>
+</head>
+<body>
+<!-- 無印:規定動作 #暗黙の規定動作 $:独自実装 ^未実装-->
+<table>
+	<tr><th>TYPE TABLE</th>   <th>null[1]</th><th>number[2]</th><th>string[4]</th><th>boolean[8]</th><th>Array[16]</th><th>Object[32]</th></tr>
+	<tr><th>null[128]</th>    <td>129</td>    <td>130</td>      <td>132</td>      <td>136</td>       <td>144</td>      <td>160</td>       </tr>
+	<tr><th>number[256]</th>  <td>257</td>    <td>258</td>      <td>260</td>      <td>264</td>       <td>272</td>      <td>288</td>       </tr>
+	<tr><th>string[512]</th>  <td>513</td>    <td>514</td>      <td>516</td>      <td>520</td>       <td>528</td>      <td>544</td>       </tr>
+	<tr><th>boolean[1024]</th><td>1025</td>   <td>1026</td>     <td>1028</td>     <td>1032</td>      <td>1040</td>     <td>1056</td>      </tr>
+	<tr><th>Array[2048]</th>  <td>2049</td>   <td>2050</td>     <td>2052</td>     <td>2056</td>      <td>2064</td>     <td>2080</td>      </tr>
+	<tr><th>Object[4096]</th> <td>4097</td>   <td>4098</td>     <td>4100</td>     <td>4104</td>      <td>4112</td>     <td>4128</td>      </tr>
+</table>
+
+<table>
+	<tr><th>ACCESS A.B</th><th>null</th>       <th>number</th>                 <th>string</th>     <th>boolean</th>          <th>Array</th>      <th>Object</th>     </tr>
+	<tr><th>null</th>      <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td>            <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>number</th>    <td>[NOT_VALUE]</td><td>$ Math.random()*(B-A)+A</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>string</th>    <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td>            <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>boolean</th>   <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td>            <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>Array</th>     <td>[NOT_VALUE]</td><td># A[B.toString()]</td>      <td>A[B]</td>       <td># A[B.toString()]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>Object</th>    <td>[NOT_VALUE]</td><td># A[B.toString()]</td>      <td>A[B]</td>       <td># A[B.toString()]</td><td>[NOT_VALUE]</td><td>$ A.intersect(B)</td></tr>
+</table>
+
+<table>
+	<tr><th>UNARY +A</th><th></th>                         </tr>
+	<tr><th>null</th>    <td># 0</td>                      </tr>
+	<tr><th>number</th>  <td>$ Math.trunc(A)</td>          </tr>
+	<tr><th>string</th>  <td>$ A.length</td>               </tr>
+	<tr><th>boolean</th> <td># A?1:0</td>                  </tr>
+	<tr><th>Array</th>   <td>$ A.length</td>               </tr>
+	<tr><th>Object</th>  <td>$ Object.values(A).length</td></tr>
+</table>
+
+<table>
+	<tr><th>UNARY -A</th><th></th>                                </tr>
+	<tr><th>null</th>    <td># 0</td>                             </tr>
+	<tr><th>number</th>  <td>-A</td>                              </tr>
+	<tr><th>string</th>  <td>$ A.split("").reverse().join("")</td></tr>
+	<tr><th>boolean</th> <td># A?-1:0</td>                        </tr>
+	<tr><th>Array</th>   <td>$ A.reverse()</td>                   </tr>
+	<tr><th>Object</th>  <td>[NOT_VALUE]</td>                     </tr>
+</table>
+
+<table>
+	<tr><th>UNARY !A</th><th></th>                                        </tr>
+	<tr><th>null</th>    <td># true</td>                                  </tr>
+	<tr><th>number</th>  <td># A===0?true:false</td>                      </tr>
+	<tr><th>string</th>  <td># A===""?true:false</td>                     </tr>
+	<tr><th>boolean</th> <td>!A</td>                                      </tr>
+	<tr><th>Array</th>   <td>$ A.length===0?true:false</td>               </tr>
+	<tr><th>Object</th>  <td>$ Object.values(A).length===0?true:false</td></tr>
+</table>
+<!-- !numは0をfalseにするか0以下をfalseにするか -->
+<table>
+	<tr><th>EXPON A**B</th><th>null</th>       <th>number</th>     <th>string</th>     <th>boolean</th>                  <th>Array</th>      <th>Object</th>     </tr>
+	<tr><th>null</th>      <td># 1</td>        <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td>              <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>number</th>    <td>[NOT_VALUE]</td><td>A**B</td>       <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td>              <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>string</th>    <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td>              <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>boolean</th>   <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td># A===false&&B===true?0:1</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>Array</th>     <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td>              <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>Object</th>    <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td>              <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+</table>
+
+<table>
+	<tr><th>MULDIV A*B</th><th>null</th>       <th>number</th>              <th>string</th>              <th>boolean</th>    <th>Array</th>      <th>Object</th>     </tr>
+	<tr><th>null</th>      <td>^ 0</td>        <td>[NOT_VALUE]</td>         <td>[NOT_VALUE]</td>         <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>number</th>    <td>[NOT_VALUE]</td><td>A*B</td>                 <td>$ B.repeat(A*(A>=0))</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>string</th>    <td>[NOT_VALUE]</td><td>$ A.repeat(B*(B>=0))</td><td>^ MLSS(A,B)</td>         <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>boolean</th>   <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td>         <td>[NOT_VALUE]</td>         <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>Array</th>     <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td>         <td>[NOT_VALUE]</td>         <td>[NOT_VALUE]</td><td>^ CROSSARR?</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>Object</th>    <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td>         <td>[NOT_VALUE]</td>         <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+</table>
+
+<table>
+	<tr><th>MULDIV A/B</th><th>null</th>       <th>number</th>        <th>string</th>      <th>boolean</th>    <th>Array</th>      <th>Object</th>     </tr>
+	<tr><th>null</th>      <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td>   <td>[NOT_VALUE]</td> <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>number</th>    <td>[NOT_VALUE]</td><td>$ B===0?NV:A/B</td><td>[NOT_VALUE]</td> <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>string</th>    <td>[NOT_VALUE]</td><td>^ LEFT(A,B)</td>   <td>$ A.split(B)</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>boolean</th>   <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td>   <td>[NOT_VALUE]</td> <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>Array</th>     <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td>   <td>^ ArSpread?</td> <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+	<tr><th>Object</th>    <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td>   <td>[NOT_VALUE]</td> <td>[NOT_VALUE]</td><td>[NOT_VALUE]</td><td>[NOT_VALUE]</td></tr>
+</table>
+
+<table>
+	<tr><th>MULDIV A%B</th><th>null</th>           <th>number</th>           <th>string</th>                 <th>boolean</th>           <th>Array</th>           <th>Object</th>           </tr>
+	<tr><th>null</th>      <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>            <td>[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>number</th>    <td>[NOT_VALUE]</td>    <td>$ B===0?NV:A%B</td>   <td>[NOT_VALUE]</td>            <td>[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>string</th>    <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>^ A.slice(A.indexOf(B))</td><td>[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>boolean</th>   <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>            <td>[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>Array</th>     <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>            <td>[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>Object</th>    <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>            <td>[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+</table>
+
+<table>
+	<tr><th>SUMSUB A+B</th><th>null</th>           <th>number</th>           <th>string</th>                  <th>boolean</th>           <th>Array</th>             <th>Object</th>           </tr>
+	<tr><th>null</th>      <td>^ 0</td>            <td># B</td>              <td>$ B</td>                     <td>[NOT_VALUE]</td>       <td>$ concat(A,B)</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>number</th>    <td># A</td>            <td>A+B</td>              <td># A+B</td>                   <td>[NOT_VALUE]</td>       <td>$ concat(A,B)</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>string</th>    <td>$ A</td>            <td># A+B</td>            <td>A+B</td>                     <td>[NOT_VALUE]</td>       <td>$ concat(A,B)</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>boolean</th>   <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>             <td>[NOT_VALUE]</td>       <td>$ concat(A,B)</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>Array</th>     <td>$ concat(A,B)</td>  <td>$ concat(A,B)</td>    <td>$ concat(A,B)</td>           <td>$ concat(A,B)</td>     <td>$ concat(A,B)</td>     <td>$ concat(A,B)</td>    </tr>
+	<tr><th>Object</th>    <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>$ A.hasOwnProp&&A.B!=NV</td> <td>[NOT_VALUE]</td>       <td>$ assign(A,B)</td>     <td>$ assign(A,B)</td>    </tr>
+</table>
+<!-- プロパティ保有判定 obj+str はここでいいの? divとかに移動する? -->
+<table>
+	<tr><th>SUMSUB A-B</th><th>null</th>           <th>number</th>           <th>string</th>                 <th>boolean</th>           <th>Array</th>           <th>Object</th>           </tr>
+	<tr><th>null</th>      <td>^ 0</td>            <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>            <td>[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>number</th>    <td>[NOT_VALUE]</td>    <td>A-B</td>              <td>[NOT_VALUE]</td>            <td>[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>string</th>    <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>^ A.replace(B)</td>         <td>[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>boolean</th>   <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>            <td>[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>Array</th>     <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>            <td>[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>Object</th>    <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>^ delete assign({},A) B</td><td>[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+</table>
+
+<table>
+	<tr><th>COMP A&lt;B</th><th>null</th>           <th>number</th>           <th>string</th>           <th>boolean</th>           <th>Array</th>                           <th>Object</th>                          </tr>
+	<tr><th>null</th>       <td># false</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>       <td>$ Object.values(A).includes(B)</td>  <td>$ Object.values(A).includes(B)</td>  </tr>
+	<tr><th>number</th>     <td>[NOT_VALUE]</td>    <td>A&lt;B</td>           <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>       <td>$ Object.values(A).includes(B)</td>  <td>$ Object.values(A).includes(B)</td>  </tr>
+	<tr><th>string</th>     <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td># A&lt;B</td>         <td>[NOT_VALUE]</td>       <td>$ Object.values(A).includes(B)</td>  <td>$ Object.values(A).includes(B)</td>  </tr>
+	<tr><th>boolean</th>    <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>       <td>$ Object.values(A).includes(B)</td>  <td>$ Object.values(A).includes(B)</td>  </tr>
+	<tr><th>Array</th>      <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>       <td>$ A.serialize()&lt;B.serialize()</td><td>[NOT_VALUE]</td>                     </tr>
+	<tr><th>Object</th>     <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>                     <td>$ A.serialize()&lt;B.serialize()</td></tr>
+</table>
+
+<table>
+	<tr><th>COMP EQ A&lt;=B</th>               <th>null</th>           <th>number</th>           <th>string</th>           <th>boolean</th>           <th>Array</th>           <th>Object</th>           </tr>
+	<tr><th>null</th>       <td># true</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>  <td>[NOT_VALUE]</td>  </tr>
+	<tr><th>number</th>     <td>[NOT_VALUE]</td>    <td>A&lt;=B</td>           <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>  <td>[NOT_VALUE]</td>  </tr>
+	<tr><th>string</th>     <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td># A&lt;=B</td>         <td>[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>  <td>[NOT_VALUE]</td>  </tr>
+	<tr><th>boolean</th>    <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>  <td>[NOT_VALUE]</td>  </tr>
+	<tr><th>Array</th>      <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>       <td>$ A.serialize()&lt;=B.serialize()</td><td>[NOT_VALUE]</td>                     </tr>
+	<tr><th>Object</th>     <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>                     <td>$ A.serialize()&lt;=B.serialize()</td></tr>
+</table>
+
+<table>
+	<tr><th>EQUAL A==B</th><th>null</th>   <th>number</th> <th>string</th> <th>boolean</th><th>Array</th>                          <th>Object</th>                         </tr>
+	<tr><th>null</th>      <td># true</td> <td># false</td><td># false</td><td># false</td><td># false</td>                        <td># false</td>                        </tr>
+	<tr><th>number</th>    <td># false</td><td>A === B</td><td># false</td><td># false</td><td># false</td>                        <td># false</td>                        </tr>
+	<tr><th>string</th>    <td># false</td><td># false</td><td>A === B</td><td># false</td><td># false</td>                        <td># false</td>                        </tr>
+	<tr><th>boolean</th>   <td># false</td><td># false</td><td># false</td><td>A === B</td><td># false</td>                        <td># false</td>                        </tr>
+	<tr><th>Array</th>     <td># false</td><td># false</td><td># false</td><td># false</td><td>$ A.serialize()===B.serialize()</td><td># false</td>                        </tr>
+	<tr><th>Object</th>    <td># false</td><td># false</td><td># false</td><td># false</td><td># false</td>                        <td>$ A.serialize()===B.serialize()</td></tr>
+</table>
+
+<table>
+	<tr><th>NOTEQUAL A!=B</th>  <th>null</th>           <th>number</th>           <th>string</th>           <th>boolean</th>           <th>Array</th>           <th>Object</th>           </tr>
+	<tr><th>null</th>           <td># false</td>        <td># true</td>      <td># true</td>      <td># true</td>       <td># true</td>     <td># true</td>      </tr>
+	<tr><th>number</th>         <td># true</td>        <td>A !== B</td>      <td># true</td>      <td># true</td>       <td># true</td>     <td># true</td>      </tr>
+	<tr><th>string</th>         <td># true</td>        <td># true</td>      <td>A !== B</td>      <td># true</td>       <td># true</td>     <td># true</td>      </tr>
+	<tr><th>boolean</th>        <td># true</td>        <td># true</td>      <td># true</td>      <td>A !== B</td>       <td># true</td>     <td># true</td>      </tr>
+	<tr><th>Array</th>          <td># true</td>        <td># true</td>      <td># true</td>      <td># true</td>       <td>$ !A.serialize()!==B.serialize()</td>     <td># true</td>      </tr>
+	<tr><th>Object</th>         <td># true</td>        <td># true</td>      <td># true</td>      <td># true</td>       <td># true</td>     <td>$ !A.serialize()!==B.serialize()</td>      </tr>
+</table>
+
+<table>
+	<tr><th>AND A&amp;&amp;B</th>               <th>null</th>           <th>number</th>           <th>string</th>           <th>boolean</th>           <th>Array</th>           <th>Object</th>           </tr>
+	<tr><th>null</th>           <td>[NOT_VALUE]</td>          <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>      <td>$ B?[NOT_VALUE]:false</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>number</th>         <td>[NOT_VALUE]</td>          <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>      <td>$ B?[NOT_VALUE]:false</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>string</th>         <td>[NOT_VALUE]</td>          <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>      <td>$ B?[NOT_VALUE]:false</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>boolean</th>        <td>$ A?[NOT_VALUE]:false</td><td>$ A?[NOT_VALUE]:false</td>      <td>$ A?[NOT_VALUE]:false</td>      <td>A&amp;&amp;B</td>       <td>$ A?[NOT_VALUE]:false</td>     <td>$ A?[NOT_VALUE]:false</td>      </tr>
+	<tr><th>Array</th>          <td>[NOT_VALUE]</td>          <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>      <td>$ B?[NOT_VALUE]:false</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>Object</th>         <td>[NOT_VALUE]</td>          <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>      <td>$ B?[NOT_VALUE]:false</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+</table>
+
+<table>
+	<tr><th>OR A||B</th>               <th>null</th>           <th>number</th>           <th>string</th>           <th>boolean</th>           <th>Array</th>           <th>Object</th>           </tr>
+	<tr><th>null</th>           <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>      <td>$ B?true:[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>number</th>         <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>      <td>$ B?true:[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>string</th>         <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>      <td>$ B?true:[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>boolean</th>        <td>$ A?true:[NOT_VALUE]</td>    <td>$ A?true:[NOT_VALUE]</td>      <td>$ A?true:[NOT_VALUE]</td>      <td>A||B</td>       <td>$ A?true:[NOT_VALUE]</td>     <td>$ A?true:[NOT_VALUE]</td>      </tr>
+	<tr><th>Array</th>          <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>      <td>$ B?true:[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+	<tr><th>Object</th>         <td>[NOT_VALUE]</td>    <td>[NOT_VALUE]</td>      <td>[NOT_VALUE]</td>      <td>$ B?true:[NOT_VALUE]</td>       <td>[NOT_VALUE]</td>     <td>[NOT_VALUE]</td>      </tr>
+</table>
+
+<table>
+	<tr><th>TERNARY A?B:C</th><th></th>                                </tr>
+	<tr><th>null</th>      <td># C</td>                             </tr>
+	<tr><th>number</th>    <td>[NOT_VALUE]</td>                     </tr>
+	<tr><th>string</th>    <td>[NOT_VALUE]</td>                     </tr>
+	<tr><th>boolean</th>   <td>A?B:C</td>                               </tr>
+	<tr><th>Array</th>     <td>$ A[B](...C)</td>                     </tr>
+	<tr><th>Object</th>    <td>$ A[B](...C)</td>                     </tr>
+</table>
+
+<table>
+	<tr><th>HASHMAPPER {A:</th><th></th>              </tr>
+	<tr><th>null</th>          <td>[NOT_VALUE]</td>   </tr>
+	<tr><th>number</th>        <td># A.toString()</td></tr>
+	<tr><th>string</th>        <td>A</td>             </tr>
+	<tr><th>boolean</th>       <td># A.toString()</td></tr>
+	<tr><th>Array</th>         <td>[NOT_VALUE]</td>   </tr>
+	<tr><th>Object</th>        <td>[NOT_VALUE]</td>   </tr>
+</table>
+<!-- 20200120 OK -->
+<script type="application/javascript">
+document.querySelectorAll("td").forEach(e => e.innerText === "[NOT_VALUE]" ? e.setAttribute("style", "color:lightgray") : 1);
+document.querySelectorAll("td").forEach(e => e.innerText[0] === "$" ? e.setAttribute("style", "color:blue") : 1);
+document.querySelectorAll("td").forEach(e => e.innerText[0] === "^" ? e.setAttribute("style", "color:red") : 1);
+</script>
+</body>
+</html>
